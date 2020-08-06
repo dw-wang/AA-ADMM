@@ -168,7 +168,7 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
     r = np.sqrt(rho*np.linalg.norm(A@x + B@z - b)**2 + rho*np.linalg.norm(B@(z-z_old))**2)
     r_history = [r]
     e_history = []
-    c_history = []
+    #c_history = []
     if z_true is not None and u_true is not None:
         e_history = [np.sqrt(np.linalg.norm(z-z_true)**2 + np.linalg.norm(u-u_true)**2)]
     
@@ -212,7 +212,7 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
         else:
             c = AA(R)
         
-        c_history.append(c)
+        #c_history.append(c)
             
         zu = Q @ c
         z = zu[:B.shape[1]]
@@ -221,4 +221,4 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
         z_old = z.copy()
         u_old = u.copy()
         
-    return z, u, np.array(r_history), np.array(e_history), c_history
+    return z, u, np.array(r_history), np.array(e_history)
