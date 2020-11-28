@@ -2,4 +2,4 @@
 
 Python code for the numerical examples in the paper
 
-[Quantifying the asymptotic linear convergence speed of Anderson Acceleration applied to ADMM](https://arxiv.org/abs/2007.02916)
+[On the Asymptotic Linear Convergence Speed of Anderson Acceleration Applied to ADMM](https://arxiv.org/abs/2007.02916)
