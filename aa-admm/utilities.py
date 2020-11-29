@@ -8,6 +8,7 @@ from scipy.sparse import linalg
 
 def prox_sum_squares_affine_base(v, t, F, g, method = "lsqr"):
     """Proximal operator of :math:`f(x) = \\|Fx - g\\|_2^2`, where F is a matrix and g is a vector.
+    adapted from https://github.com/cvxgrp/a2dr
     """
 #     if F.shape[0] != g.shape[0]:
 #        raise ValueError("Dimension mismatch: nrow(F) != nrow(g)")
