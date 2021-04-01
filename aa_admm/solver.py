@@ -1,3 +1,4 @@
+import time
 from aa_admm.utilities import *
 import matplotlib.pyplot as plt
 from pylab import rcParams
@@ -7,8 +8,8 @@ rcParams['text.usetex'] = True
 def opt_sAA2_coeff(spectrum):
     beta = ()
     min_rho_mu = np.Inf
-    for beta1 in np.arange(-1,1.05,0.05):
-        for beta2 in np.arange(-1,1.05,0.05):
+    for beta1 in np.arange(0.5,1.05,0.05):
+        for beta2 in np.arange(-0.5,0.1,0.05):
             rho_mu = 0
             for mu in spectrum:
                 roots = np.roots([1, -(1+beta1+beta2)*mu, beta1*mu, beta2*mu])
@@ -59,7 +60,7 @@ def AA(R_history):
     return c
 
 
-def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_true=None, use_sAA=False, beta=None, xzu_init=None, solIsApprox=True):
+def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, relaxation=1, z_true=None, use_sAA=False, beta=None, xzu_init=None, solIsApprox=True):
     """
     Apply Anderson accelerated ADMM (accelerated on variable z) for solving:
         f1(x) + f2(z)  s.t. Ax + Bz = b
@@ -72,15 +73,25 @@ def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tru
     eps_abs:     absolute tolerance
     eps_rel:     relative tolerance
     """
+    timings = []
+    
     if xzu_init is None:
         xzu_init = [np.zeros(A.shape[1]), np.zeros(B.shape[1]), np.zeros(A.shape[0])]
     x_old = xzu_init[0].copy()
     z_old = xzu_init[1].copy()
     u_old = xzu_init[2].copy()
 
+    TT = 0
+    TT -= time.time()  # start timing
+    
     x = admm_update[0](z_old, u_old)
-    z = admm_update[1](x, u_old)
+    h = relaxation * A@x + (1-relaxation) * (B@z_old - b)
+    z = admm_update[1](h, u_old)
     u = admm_update[2](z)
+    
+    TT += time.time()  # end timing
+    timings.append(TT)
+    print(TT)
     
     r = np.sqrt(rho*np.linalg.norm(A@x + B@z - b)**2 + rho*np.linalg.norm(B@(z-z_old))**2)
     r_history = [r]
@@ -95,11 +106,14 @@ def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tru
     z_old = z.copy()
     
     k = 1
-    while True:        
+    while True:
+        TT -= time.time()
+        
         k += 1
         
         x = admm_update[0](z, u)
-        z = admm_update[1](x, u)
+        h = relaxation * A@x + (1-relaxation) * (B@z - b)
+        z = admm_update[1](h, u)
         
         r = np.sqrt(rho*np.linalg.norm(A@x + B@z - b)**2 + rho*np.linalg.norm(B@(z-z_old))**2)
         r_history.append(r)
@@ -114,6 +128,8 @@ def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tru
                 acc_history = e_history
 
         if k >= maxit or acc < eps_abs + eps_rel*acc_history[0]:
+            TT += time.time()
+            timings.append(TT)
             break
         
         # Update memory
@@ -138,11 +154,14 @@ def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tru
         u = admm_update[2](z)
         
         z_old = z.copy()
+        
+        TT += time.time()
+        timings.append(TT)
 
         
-    return z, np.array(r_history), np.array(e_history), c_history
+    return z, np.array(r_history), np.array(e_history), c_history, timings
 
-def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_true=None, u_true=None, use_sAA=False, beta=None, xzu_init=None):
+def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, relaxation=1, z_true=None, u_true=None, use_sAA=False, beta=None, xzu_init=None):
     """
     Apply Anderson accelerated ADMM (accelerated on stacked variable [z; u]) for solving:
         f1(x) + f2(z)  s.t. Ax + Bz = b
@@ -155,15 +174,24 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
     eps_abs:     absolute tolerance
     eps_rel:     relative tolerance
     """
+    timings = []
+    
     if xzu_init is None:
         xzu_init = [np.zeros(A.shape[1]), np.zeros(B.shape[1]), np.zeros(A.shape[0])]
     x_old = xzu_init[0].copy()
     z_old = xzu_init[1].copy()
     u_old = xzu_init[2].copy()
 
+    TT = 0
+    TT -= time.time()  # start timing
+    
     x = admm_update[0](z_old, u_old)
-    z = admm_update[1](x, u_old)
-    u = A@x + B@z - b + u_old
+    h = relaxation * A@x + (1-relaxation) * (B@z_old - b)
+    z = admm_update[1](h, u_old)
+    u = h + B@z - b + u_old
+    
+    TT += time.time()  # end timing
+    timings.append(TT)
     
     r = np.sqrt(rho*np.linalg.norm(A@x + B@z - b)**2 + rho*np.linalg.norm(B@(z-z_old))**2)
     r_history = [r]
@@ -179,12 +207,15 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
     u_old = u.copy()
     
     k = 1
-    while True:        
+    while True:
+        TT -= time.time()  # start timing
+        
         k += 1
         
         x = admm_update[0](z, u)
-        z = admm_update[1](x, u)
-        u = A@x + B@z - b + u
+        h = relaxation * A@x + (1-relaxation) * (B@z - b)
+        z = admm_update[1](h, u)
+        u = h + B@z - b + u
         
         r = np.sqrt(rho*np.linalg.norm(A@x + B@z - b)**2 + rho*np.linalg.norm(B@(z-z_old))**2)
         r_history.append(r)
@@ -194,6 +225,8 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
             e_history.append(e)
         
         if k >= maxit or r < eps_abs + eps_rel*r_history[0]:
+            TT += time.time()  # end timing
+            timings.append(TT)
             break
         
         # Update memory
@@ -221,4 +254,7 @@ def AA_ADMM_ZU(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, z_tr
         z_old = z.copy()
         u_old = u.copy()
         
-    return z, u, np.array(r_history), np.array(e_history)
+        TT += time.time()  # end timing
+        timings.append(TT)
+        
+    return z, u, np.array(r_history), np.array(e_history), timings

@@ -47,13 +47,20 @@ class TestExamples(BaseTest):
         B = -np.eye(self.n)
         b = np.zeros(self.n)
         
-        # Compute results
-        _, r0, e0, _ = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
-        _, r1, e1, self.c1 = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
-        _, r2, e2, self.c2 = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
-        _, r3, e3, self.c3 = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
-        _, r5, e5, _ = AA_ADMM_Z(admm_update, A, B, b, 5, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
-        _, r10, e10, c10 = AA_ADMM_Z(admm_update, A, B, b, 10, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
+        # Compute results with AA
+        _, r0, e0, _, t0 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
+        _, r1, e1, self.c1, t1 = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
+        _, r2, e2, self.c2, t2 = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
+        _, r3, e3, self.c3, t3 = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
+        _, r5, e5, _, t5 = AA_ADMM_Z(admm_update, A, B, b, 5, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
+        _, r10, e10, c10, t10 = AA_ADMM_Z(admm_update, A, B, b, 10, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
+        
+        # use relaxation to accelerate
+        _, _, e_rx1, _, t_rx1 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.5, z_true=self.z_true, solIsApprox=False)
+        _, _, e_rx2, _, t_rx2 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.6, z_true=self.z_true, solIsApprox=False)
+        _, _, e_rx3, _, t_rx3 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.7, z_true=self.z_true, solIsApprox=False)
+        _, _, e_rx4, _, t_rx4 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.8, z_true=self.z_true, solIsApprox=False)
+        
         # Compute beta in sAA(1)-ADMM
         # Iteration matrix M
         P = np.linalg.inv(self.dataA.T.toarray() @ self.dataA.toarray() + self.rho * np.eye(self.n))
@@ -65,18 +72,22 @@ class TestExamples(BaseTest):
         print(self.rho_M)
         beta = (1-np.sqrt(1-self.rho_M))/(1+np.sqrt(1-self.rho_M))
         self.beta12, self.rho_T2 = opt_sAA2_coeff(self.es)# beta1, beta2 for sAA(2)
-        self.beta123, self.rho_T3 = opt_sAA3_coeff(self.es, np.arange(0.8,1.1,0.005), np.arange(-0.3,-0.2,0.002), np.arange(0.01,0.03,0.001))  # beta1, beta2, beta3 for sAA(3)
+        # self.beta123, self.rho_T3 = opt_sAA3_coeff(self.es, np.arange(0.85,1.0,0.005), np.arange(-0.3,-0.2,0.002), np.arange(0.015,0.03,0.001))  # beta1, beta2, beta3 for sAA(3)
+        self.beta123 = (0.955, -0.25, 0.028)
+        self.rho_T3 = 0.4837
         print(1-np.sqrt(1-self.rho_M))   # rho(T) of sAA(1)
         print(self.rho_T2)               # rho(T2) of sAA(2)
         print(self.rho_T3)               # rho(T3) of sAA(3)
+        
         # solve the problem with sAA(1)-ADMM
-        _, r_sAA1, e_sAA1, _ = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, use_sAA=True, beta=beta, solIsApprox=False)
-        _, r_sAA2, e_sAA2, _ = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, use_sAA=True, beta=self.beta12, solIsApprox=False)
-        _, r_sAA3, e_sAA3, _ = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, use_sAA=True, beta=self.beta123, solIsApprox=False)
+        _, r_sAA1, e_sAA1, _, _ = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, use_sAA=True, beta=beta, solIsApprox=False)
+        _, r_sAA2, e_sAA2, _, _ = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, use_sAA=True, beta=self.beta12, solIsApprox=False)
+        _, r_sAA3, e_sAA3, _, _ = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, use_sAA=True, beta=self.beta123, solIsApprox=False)
         
         # store residuals results
         self.residuals = [r0, r1, r2, r3, r5, r_sAA1, r_sAA2, r_sAA3]
         self.errors = [e0, e1, e2, e3, e5, e_sAA1, e_sAA2, e_sAA3]
+        self.timings = [t0, t1, t2, t3, t5]
     
     def plot_residuals(self):
         # Plot residuals
@@ -89,7 +100,7 @@ class TestExamples(BaseTest):
                 linestyles=['-', '-', '-', '-', '-', '-', '-', '-', '--', '--', '--'])
         
     def plot_errors(self):
-        # Plot residuals
+        # Plot errors
         e_sAA = self.errors[-1]
         rho_ref1 = e_sAA[0] * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 62, 63))
         rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(0, 50, 51))
@@ -99,6 +110,13 @@ class TestExamples(BaseTest):
                 linestyles=['-', '-', '-', '-', '-', '-', '-', '-', '--', '--', '--'],
                 pltError=True)
 
+        
+    def plot_timings(self):
+        self.plot_results(self.errors[:5], ts=self.timings, \
+                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM'],
+                          linestyles=['-', '-', '-', '-', '-'],
+                          pltError=True)
+        
     def plot_eigs(self):
         if self.es is None or self.J is None:
             raise ValueError('The Jacobian and spectrum have not been evaluated!')
@@ -153,6 +171,7 @@ if __name__ == '__main__':
     tests = TestExamples()
     tests.setUp()
     tests.test_ridge_regression()
-    tests.plot_residuals()
+    #tests.plot_residuals()
     tests.plot_errors()
+    tests.plot_timings()
     tests.plot_eigs()

@@ -114,14 +114,15 @@ class TestExamples(BaseTest):
         b = np.zeros(self.n+1)
         
         # Compute results
-        self.z_true_approx, _, _, self.c12 = AA_ADMM_Z(admm_update, A, B, b, 12, self.rho, self.maxit, self.eps_abs, self.eps_rel)
-        _, r0, e0, _ = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
-        _, r1, e1, self.c1 = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
-        _, r2, e2, self.c2 = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
-        _, r3, e3, self.c3 = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
-        _, r5, e5, self.c5 = AA_ADMM_Z(admm_update, A, B, b, 5, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
-        _, r10, e10, self.c10 = AA_ADMM_Z(admm_update, A, B, b, 10, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
-        _, r10, e10, self.c20 = AA_ADMM_Z(admm_update, A, B, b, 20, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
+        self.z_true_approx, _, _, self.c12, _ = AA_ADMM_Z(admm_update, A, B, b, 12, self.rho, self.maxit, self.eps_abs, self.eps_rel)
+        _, r0, e0, _, t0 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
+        _, r1, e1, self.c1, t1 = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
+        _, r2, e2, self.c2, t2 = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
+        _, r3, e3, self.c3, t3 = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
+        _, r5, e5, self.c5, t5 = AA_ADMM_Z(admm_update, A, B, b, 5, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
+        _, r10, e10, self.c10, t10 = AA_ADMM_Z(admm_update, A, B, b, 10, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
+        _, r10, e10, self.c20, _ = AA_ADMM_Z(admm_update, A, B, b, 20, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
+        
         # Compute beta in sAA(1)-ADMM
         self.compute_rho_M()
         print(self.rho_M)
@@ -133,13 +134,15 @@ class TestExamples(BaseTest):
         print(1-np.sqrt(1-self.rho_M))   # rho(T) of sAA(1)
         print(self.rho_T2)               # rho(T2) of sAA(2)
         print(self.rho_T3)               # rho(T3) of sAA(3)
-        _, r_sAA1, e_sAA1, _ = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=beta, solIsApprox=True)
-        _, r_sAA2, e_sAA2, _ = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=self.beta12, solIsApprox=True)
-        _, r_sAA3, e_sAA3, _ = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=self.beta123, solIsApprox=True)
+        
+        _, r_sAA1, e_sAA1, _, _ = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=beta, solIsApprox=True)
+        _, r_sAA2, e_sAA2, _, _ = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=self.beta12, solIsApprox=True)
+        _, r_sAA3, e_sAA3, _, _ = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=self.beta123, solIsApprox=True)
         
         # store residuals results
         self.residuals = [r0, r1, r2, r3, r5, r10, r_sAA1, r_sAA2, r_sAA3]
         self.errors = [e0, e1, e2, e3, e5, e10, e_sAA1, e_sAA2, e_sAA3]
+        self.timings = [t0, t1, t2, t3, t5, t10]
     
     def plot_residuals(self):
         # Plot residuals
@@ -161,6 +164,12 @@ class TestExamples(BaseTest):
                 labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM', r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
                 linestyles=['-','-', '-', '-', '-', '-', '-', '-', '-', '--', '--', '--'],
                 pltError=True)
+        
+    def plot_timings(self):
+        self.plot_results(self.errors[:6], ts=self.timings, \
+                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM'],
+                          linestyles=['-', '-', '-', '-', '-', '-'],
+                          pltError=True)
         
     def plot_eigs(self):
         if self.es is None or self.J is None:
@@ -218,4 +227,5 @@ if __name__ == '__main__':
     tests.test_regularized_logistic_regression()
     tests.plot_residuals()
     tests.plot_errors()
+    tests.plot_timings()
     tests.plot_eigs()
