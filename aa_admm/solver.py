@@ -91,7 +91,7 @@ def AA_ADMM_Z(admm_update, A, B, b, winsize, rho, maxit, eps_abs, eps_rel, relax
     
     TT += time.time()  # end timing
     timings.append(TT)
-    print(TT)
+    #print(TT)
     
     r = np.sqrt(rho*np.linalg.norm(A@x + B@z - b)**2 + rho*np.linalg.norm(B@(z-z_old))**2)
     r_history = [r]
