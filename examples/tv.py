@@ -70,7 +70,7 @@ class TestExamples(BaseTest):
         b = np.zeros(self.n-1)
         
         admm_update = [lambda z, u: prox_sum_squares_affine_base(self.y, self.rho/2, self.D, z-u),
-                       lambda x, u: prox_op_l1(self.D @ x + u, self.lambda_/self.rho)]
+                       lambda h, u: prox_op_l1(h + u, self.lambda_/self.rho)]
 
         # Compute results
         self.z_true_approx, self.u_true_approx, _, _, _ = AA_ADMM_ZU(admm_update, D, B, b, 12, self.rho, self.maxit, self.eps_abs, self.eps_rel)
@@ -85,43 +85,73 @@ class TestExamples(BaseTest):
         self.compute_rho_M()
         print(self.rho_M)
         beta = (1-np.sqrt(1-self.rho_M))/(1+np.sqrt(1-self.rho_M))  # beta for sAA(1)
-        self.beta12, self.rho_T2 = opt_sAA2_coeff(self.es)   # beta1, beta2 for sAA(2)
+#         self.beta12, self.rho_T2 = opt_sAA2_coeff(self.es)   # beta1, beta2 for sAA(2) = 1.04, -0.14
+        self.beta12, self.rho_T2 = (1.04, -0.14), 0.8274192537
+#         print(self.beta12)
         print(1-np.sqrt(1-self.rho_M))   # rho(T) of sAA(1)
-        print(self.rho_T2)               # rho(T2) of sAA(2)
+        print(self.rho_T2)               # rho(T2) of sAA(2) = 0.8274192537
         
         _, _, r_sAA1, e_sAA1, _ = AA_ADMM_ZU(admm_update, D, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, u_true=self.u_true_approx, use_sAA=True, beta=beta)
         _, _, r_sAA2, e_sAA2, _ = AA_ADMM_ZU(admm_update, D, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, u_true=self.u_true_approx, use_sAA=True, beta=self.beta12)
         
-        # store residuals results
-        self.residuals = [r0, r1, r2, r3, r5, r10, r_sAA1, r_sAA2]
-        self.errors = [e0, e1, e2, e3, e5, e10, e_sAA1, e_sAA2]
-        self.timings = [t0, t1, t2, t3, t5, t10]
-    
-    def plot_residuals(self):
-        # Plot residuals
-        r_sAA = self.residuals[-1]
-        rho_ref1 = r_sAA[0] * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(1, 200, 200))
-        rho_ref2 = r_sAA[0] * np.power(self.rho_T2, np.linspace(1, 190, 190))
-        self.plot_results(self.residuals+[rho_ref1, rho_ref2], \
-                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$'], \
-                linestyles=['-','-', '-', '-', '-', '-', '-', '-', '--', '--'])
+        # accelerate ADMM by over-relaxation ('relax' = 1.9 gives the best convergence)
+#         _, _, e_rx1, _, t_rx1 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.1, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx2, _, t_rx2 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.2, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx3, _, t_rx3 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.3, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx4, _, t_rx4 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.4, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx5, _, t_rx5 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.5, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx6, _, t_rx6 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.6, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx7, _, t_rx7 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.7, z_true=self.z_true_approx, u_true=self.u_true_approx)
+#         _, _, e_rx8, _, t_rx8 = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.8, z_true=self.z_true_approx, u_true=self.u_true_approx)
+        _, _, e_rx, _, t_rx = AA_ADMM_ZU(admm_update, D, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.9, z_true=self.z_true_approx, u_true=self.u_true_approx)
         
-    def plot_errors(self):
-        # Plot residuals
+        # store residuals results
+        self.errors = [e0, e1, e2, e3, e5, e10, e_rx, e_sAA1, e_sAA2]
+        self.timings = [t0, t1, t2, t3, t5, t10, t_rx]
+    
+    def plot_aa_admm_errors(self):
+        # Plot errors comparing ADMM and AA-ADMM
         e_sAA = self.errors[-1]
-        rho_ref1 = e_sAA[0] * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(1, 208, 209))
-        rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(1, 196, 197))
-        self.plot_results(self.errors+[rho_ref1, rho_ref2], \
-                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$'], \
-                linestyles=['-','-', '-', '-', '-', '-', '-', '-', '--', '--'],
+        rho_ref1 = (e_sAA[0]+700) * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(1, 215, 216))
+        rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(1, 175, 176))
+        self.plot_results(self.errors + [rho_ref1, rho_ref2], \
+                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', \
+                        'rADMM(1.9)', 'sAA(1)-ADMM', 'sAA(2)-ADMM', \
+                         r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$'], \
+                linestyles=['-', '-', '-', '-', '-', '-', '-.', '-.', '-.', ':', ':'],\
+                colors=['k', 'r', 'g', 'b', 'c', 'gray', 'm', 'r', 'g', 'r', 'g'],\
+                linewidths=[3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.5, 2.5, 2.5, 1.5, 1.5], \
+                pltError=True,\
+                yLabel=r'$\sqrt{||z_k-z^*||_2^2+||u_k-u^*||_2^2}$',\
+                filename='iters_tv.png')
+        
+    def plot_saa_admm_errors(self):
+        # Plot erros comparing ADMM and sAA-ADMM
+        e_sAA = self.errors[-1]
+        rho_ref1 = e_sAA[0] * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(1, 200, 201))
+        rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(1, 180, 181))
+        self.plot_results([self.errors[0]]+self.errors[7:]+[rho_ref1, rho_ref2], \
+                labels=['ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$'], \
+                linestyles=['-','-', '-', '--', '--'],\
                 pltError=True, \
                 yLabel=r'$\sqrt{||z_k-z^*||_2^2+||u_k-u^*||_2^2}$')
         
+#     def plot_radmm_errors(self):
+#         # Plot errors comparing ADMM and relaxed-ADMM
+#         self.plot_results(self.relax_errors, \
+#                 labels=['rADMM(1.1)', 'rADMM(1.2)', 'rADMM(1.3)', 'rADMM(1.4)', 'rADMM(1.5)', 'rADMM(1.6)', 'rADMM(1.7)', 'rADMM(1.8)', 'rADMM(1.9)'], \
+#                 linestyles=['-','-', '-', '-', '-', '-', '-', '-', '-'],
+#                 pltError=True)
+        
     def plot_timings(self):
-        self.plot_results(self.errors[:6], ts=self.timings, \
-                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM'],
-                          linestyles=['-', '-', '-', '-', '-', '-'],
-                          pltError=True)
+        self.plot_results(self.errors[:7], ts=self.timings, \
+                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', 'rADMM(1.9)'],
+                          linestyles=['-', '-', '-', '-', '-', '-', '-'],\
+                          colors=['k', 'r', 'g', 'b', 'c', 'gray', 'm'],\
+                          linewidths=[3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5], \
+                          pltError=True,
+                          yLabel=r'$\sqrt{||z_k-z^*||_2^2+||u_k-u^*||_2^2}$',\
+                          filename='timing_tv.png')
         
     def plot_eigs(self):
         if self.es is None or self.J is None:
@@ -157,16 +187,19 @@ class TestExamples(BaseTest):
         X = [e.real for e in eigsT2]
         Y = [e.imag for e in eigsT2]
         plt.scatter(X, Y, marker='*', label=r"$\sigma(\Psi_2'(x^*))$")
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
         
         #plt.xlim(left=0)
-        plt.legend(prop={'size': 10},loc="upper right")
+        plt.legend(prop={'size': 14},loc="upper right")
+        plt.savefig('eigs_tv.png')
         plt.show()
 
 if __name__ == '__main__':
     tests = TestExamples()
     tests.setUp()
     tests.test_total_variation()
-    tests.plot_residuals()
-    tests.plot_errors()
+    tests.plot_aa_admm_errors()
+#     tests.plot_saa_admm_errors()
     tests.plot_timings()
     tests.plot_eigs()

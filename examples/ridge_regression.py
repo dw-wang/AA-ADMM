@@ -49,6 +49,7 @@ class TestExamples(BaseTest):
         
         # Compute results with AA
         _, r0, e0, _, t0 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
+        _, r0, e0, _, t0 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
         _, r1, e1, self.c1, t1 = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)
         _, r2, e2, self.c2, t2 = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
         _, r3, e3, self.c3, t3 = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true, solIsApprox=False)       
@@ -91,27 +92,41 @@ class TestExamples(BaseTest):
     
     def plot_aa_admm_errors(self):
         # Plot errors comparing ADMM and AA-ADMM
-        self.plot_results(self.errors[:6], \
-                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'rADMM(1.9)'], \
-                linestyles=['-', '-', '-', '-', '-', '--'])
+        e_sAA = self.errors[5]
+        rho_ref1 = (e_sAA[0]+2.0) * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 66, 67))
+        rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(0, 51, 52))
+        rho_ref3 = (e_sAA[0]-0.5) * np.power(self.rho_T3, np.linspace(0, 45, 46))
+        self.plot_results(self.errors + [rho_ref1, rho_ref2, rho_ref3], \
+                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', \
+                        'rADMM(1.9)', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM', \
+                         r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
+                linestyles=['-', '-', '-', '-', '-', '-.', '-.', '-.', '-.', ':', ':', ':'],\
+                colors=['k', 'r', 'g', 'b', 'c', 'm', 'r', 'g', 'b', 'r', 'g', 'b'],\
+                linewidths=[3.5, 3.5, 3.5, 3.5, 3.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5, 1.5], \
+                pltError=True,\
+                filename='iters_ridge.png')
         
     def plot_saa_admm_errors(self):
         # Plot errors comparing ADMM and sAA-ADMM
         e_sAA = self.errors[-1]
-        rho_ref1 = (e_sAA[0]+0.9) * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 62, 63))
-        rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(0, 50, 51))
-        rho_ref3 = (e_sAA[0]-0.5) * np.power(self.rho_T3, np.linspace(0, 46, 47))
+        rho_ref1 = (e_sAA[0]+2.0) * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 85, 86))
+        rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(0, 55, 56))
+        rho_ref3 = (e_sAA[0]-0.5) * np.power(self.rho_T3, np.linspace(0, 43, 44))
         self.plot_results([self.errors[0]]+self.errors[6:9]+[rho_ref1, rho_ref2, rho_ref3], \
                 labels=['ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM',\
                        r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
-                linestyles=['-', '-', '-', '-', '--', '--', '--'])
+                linestyles=['-', '-', '-', '-', '--', '--', '--'],\
+                pltError=True)
 
         
     def plot_timings(self):
         self.plot_results(self.errors[:6], ts=self.timings, \
-                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'rADMM(1.9)'],
-                          linestyles=['-', '-', '-', '-', '-', '--'],
-                          pltError=True)
+                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'rADMM(1.9)'],\
+                          linestyles=['-', '-', '-', '-', '-', '-'],\
+                          colors=['k', 'r', 'g', 'b', 'c', 'm'],\
+                          linewidths=[3.5, 3.5, 3.5, 3.5, 3.5, 3.5], \
+                          pltError=True,\
+                          filename='timing_ridge.png')
         
     def plot_eigs(self):
         if self.es is None or self.J is None:
@@ -158,9 +173,12 @@ class TestExamples(BaseTest):
         X = [e.real for e in eigsT3]
         Y = [e.imag for e in eigsT3]
         plt.scatter(X, Y, marker='*', label=r"$\sigma(\Psi_3'(X^*))$")
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
         
         plt.xlim(left=0)
-        plt.legend(prop={'size': 10},loc="upper right")
+        plt.legend(prop={'size': 14},loc="upper right")
+        plt.savefig('eigs_ridge.png')
         plt.show()
 
 if __name__ == '__main__':
@@ -168,6 +186,6 @@ if __name__ == '__main__':
     tests.setUp()
     tests.test_ridge_regression()
     tests.plot_aa_admm_errors()
-    tests.plot_saa_admm_errors()
+#     tests.plot_saa_admm_errors()
     tests.plot_timings()
     tests.plot_eigs()

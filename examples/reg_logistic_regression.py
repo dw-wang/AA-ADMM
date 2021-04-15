@@ -114,14 +114,14 @@ class TestExamples(BaseTest):
         b = np.zeros(self.n+1)
         
         # Compute results
-        self.z_true_approx, _, _, self.c12, _ = AA_ADMM_Z(admm_update, A, B, b, 12, self.rho, self.maxit, self.eps_abs, self.eps_rel)
+        self.z_true_approx, _, _, self.c20, _ = AA_ADMM_Z(admm_update, A, B, b, 20, self.rho, self.maxit, self.eps_abs, self.eps_rel)
         _, r0, e0, _, t0 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
         _, r1, e1, self.c1, t1 = AA_ADMM_Z(admm_update, A, B, b, 1, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
         _, r2, e2, self.c2, t2 = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
         _, r3, e3, self.c3, t3 = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
         _, r5, e5, self.c5, t5 = AA_ADMM_Z(admm_update, A, B, b, 5, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
         _, r10, e10, self.c10, t10 = AA_ADMM_Z(admm_update, A, B, b, 10, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)        
-        _, r10, e10, self.c20, _ = AA_ADMM_Z(admm_update, A, B, b, 20, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
+        #_, r10, e10, self.c20, _ = AA_ADMM_Z(admm_update, A, B, b, 20, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, solIsApprox=True)
         
         # Compute beta in sAA(1)-ADMM
         self.compute_rho_M()
@@ -139,37 +139,67 @@ class TestExamples(BaseTest):
         _, r_sAA2, e_sAA2, _, _ = AA_ADMM_Z(admm_update, A, B, b, 2, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=self.beta12, solIsApprox=True)
         _, r_sAA3, e_sAA3, _, _ = AA_ADMM_Z(admm_update, A, B, b, 3, self.rho, self.maxit, self.eps_abs, self.eps_rel, z_true=self.z_true_approx, use_sAA=True, beta=self.beta123, solIsApprox=True)
         
-        # store residuals results
-        self.residuals = [r0, r1, r2, r3, r5, r10, r_sAA1, r_sAA2, r_sAA3]
-        self.errors = [e0, e1, e2, e3, e5, e10, e_sAA1, e_sAA2, e_sAA3]
-        self.timings = [t0, t1, t2, t3, t5, t10]
-    
-    def plot_residuals(self):
-        # Plot residuals
-        r_sAA = self.residuals[-1]
-        rho_ref1 = r_sAA[0] * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 42, 43))
-        rho_ref2 = r_sAA[0] * np.power(self.rho_T2, np.linspace(0, 40, 41))
-        rho_ref3 = r_sAA[0] * np.power(self.rho_T3, np.linspace(0, 31, 32))
-        self.plot_results(self.residuals+[rho_ref1, rho_ref2, rho_ref3], \
-                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM','AA(5)-ADMM', 'AA(10)-ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM', r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
-                linestyles=['-', '-', '-', '-', '-', '-', '-', '-', '-', '--', '--', '--'])
+        # accelerate ADMM by over-relaxation ('relax' = 1.9 gives the best convergence)
+#         _, _, e_rx1, _, t_rx1 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.1, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx2, _, t_rx2 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.2, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx3, _, t_rx3 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.3, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx4, _, t_rx4 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.4, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx5, _, t_rx5 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.5, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx6, _, t_rx6 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.6, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx7, _, t_rx7 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.7, z_true=self.z_true_approx, solIsApprox=True)
+#         _, _, e_rx8, _, t_rx8 = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.8, z_true=self.z_true_approx, solIsApprox=True)
+        _, _, e_rx, _, t_rx = AA_ADMM_Z(admm_update, A, B, b, 0, self.rho, self.maxit, self.eps_abs, self.eps_rel, relaxation=1.9, z_true=self.z_true_approx, solIsApprox=True)
         
-    def plot_errors(self):
-        # Plot residuals
+        # store residuals results
+        self.errors = [e0, e1, e2, e3, e5, e10, e_rx, e_sAA1, e_sAA2, e_sAA3]
+        self.timings = [t0, t1, t2, t3, t5, t10, t_rx]
+    
+    def plot_aa_admm_errors(self):
+        # Plot errors comparing ADMM and AA-ADMM
+        e_sAA = self.errors[6]
+        rho_ref1 = (e_sAA[0]+0.05) * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 40, 41))
+        rho_ref2 = (e_sAA[0]+0.2) * np.power(self.rho_T2, np.linspace(0, 36, 37))
+        rho_ref3 = (e_sAA[0]+0.03) * np.power(self.rho_T3, np.linspace(0, 31, 32))
+        self.plot_results(self.errors + [rho_ref1, rho_ref2, rho_ref3], \
+                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', \
+                        'rADMM(1.6)', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM', \
+                         r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
+                linestyles=['-', '-', '-', '-', '-', '-', '-.', '-.', '-.', '-.', ':', ':', ':'],\
+                colors=['k', 'r', 'g', 'b', 'c', 'gray', 'm', 'r', 'g', 'b', 'r', 'g', 'b'],\
+                linewidths=[3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 2.5, 2.5, 2.5, 2.5, 1.5, 1.5, 1.5], \
+                pltError=True,\
+                maxIt=82,\
+                filename='iters_logreg.png')
+        
+    def plot_saa_admm_errors(self):
+        # Plot errors comparing ADMM and sAA-ADMM
         e_sAA = self.errors[-1]
         rho_ref1 = e_sAA[0] * np.power((1-np.sqrt(1-self.rho_M)), np.linspace(0, 40, 41))
         rho_ref2 = e_sAA[0] * np.power(self.rho_T2, np.linspace(0, 40, 41))
         rho_ref3 = e_sAA[0] * np.power(self.rho_T3, np.linspace(0, 31, 32))
-        self.plot_results(self.errors+[rho_ref1, rho_ref2, rho_ref3], \
-                labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM', r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
-                linestyles=['-','-', '-', '-', '-', '-', '-', '-', '-', '--', '--', '--'],
-                pltError=True)
+        self.plot_results([self.errors[0]]+self.errors[7:]+[rho_ref1, rho_ref2, rho_ref3], \
+                labels=['ADMM', 'sAA(1)-ADMM', 'sAA(2)-ADMM', 'sAA(3)-ADMM',\
+                       r'$\rho^*_{sAA(1)}$', r'$\rho^*_{sAA(2)}$', r'$\rho^*_{sAA(3)}$'], \
+                linestyles=['-', '-', '-', '-', '--', '--', '--'],
+                pltError=True,
+                maxIt=82)
+        
+#     def plot_radmm_errors(self):
+#         # Plot errors comparing ADMM and relaxed-ADMM
+#         self.plot_results(self.relax_errors, \
+#                 labels=['rADMM(1.1)', 'rADMM(1.2)', 'rADMM(1.3)', 'rADMM(1.4)', 'rADMM(1.5)', 'rADMM(1.6)', 'rADMM(1.7)', 'rADMM(1.8)', 'rADMM(1.9)'], \
+#                 linestyles=['-','-', '-', '-', '-', '-', '-', '-', '-'],
+#                 pltError=True)
         
     def plot_timings(self):
-        self.plot_results(self.errors[:6], ts=self.timings, \
-                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM'],
-                          linestyles=['-', '-', '-', '-', '-', '-'],
-                          pltError=True)
+        self.plot_results(self.errors[:7], ts=self.timings, \
+                          labels=['ADMM', 'AA(1)-ADMM', 'AA(2)-ADMM', 'AA(3)-ADMM', 'AA(5)-ADMM', 'AA(10)-ADMM', 'rADMM(1.9)'],
+                          linestyles=['-', '-', '-', '-', '-', '-', '-'],\
+                          colors=['k', 'r', 'g', 'b', 'c', 'gray', 'm'],\
+                          linewidths=[3.5, 3.5, 3.5, 3.5, 3.5, 3.5, 3.5], \
+                          pltError=True,\
+                          maxIt=82,\
+                          filename='timing_logreg.png')
         
     def plot_eigs(self):
         if self.es is None or self.J is None:
@@ -216,16 +246,19 @@ class TestExamples(BaseTest):
         X = [e.real for e in eigsT3]
         Y = [e.imag for e in eigsT3]
         plt.scatter(X, Y, marker='*', label=r"$\sigma(\Psi_3'(X^*))$")
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
         
         plt.xlim(left=0)
-        plt.legend(prop={'size': 10},loc="upper right")
+        plt.legend(prop={'size': 14},loc="upper right")
+        plt.savefig('eigs_logreg.png')
         plt.show()
 
 if __name__ == '__main__':
     tests = TestExamples()
     tests.setUp()
     tests.test_regularized_logistic_regression()
-    tests.plot_residuals()
-    tests.plot_errors()
+    tests.plot_aa_admm_errors()
+#     tests.plot_saa_admm_errors()
     tests.plot_timings()
     tests.plot_eigs()

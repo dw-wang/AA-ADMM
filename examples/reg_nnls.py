@@ -160,9 +160,11 @@ class TestExamples(BaseTest):
         X = [e.real for e in eigsT2]
         Y = [e.imag for e in eigsT2]
         plt.scatter(X, Y, marker='*', label=r"$\sigma(\Psi_2'(X^*))$")
+        plt.xticks(fontsize=15)
+        plt.yticks(fontsize=15)
         
         #plt.xlim(left=0)
-        plt.legend(prop={'size': 10},loc="upper right")
+        plt.legend(prop={'size': 14},loc="upper right")
         plt.show()
 
 if __name__ == '__main__':
